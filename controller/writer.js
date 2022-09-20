@@ -14,7 +14,9 @@ router.get('/', requireWriter,async (req, res) => {
     res.render('writer/indexWriter',{data:allnews})
 })
 router.get('/indexWriter', requireWriter,async (req, res) => {
-    res.render('writer/indexWriter',)
+    const db = await getDB();
+    const allnews = await db.collection('Newspaper').find({}).toArray();
+    res.render('writer/indexWriter',{data:allnews})
 })
 router.get('/infoWriter',requireWriter, async(req, res) => {
     const acc = req.session["Writer"]
@@ -37,6 +39,7 @@ router.post('/updateWriter',requireWriter,async(req,res)=>{
     const email = req.body.txtEmail;
     const phone = req.body.txtPhone;
     const address = req.body.txtAddress;
+    const subcribe = [];
     const filter = { _id: ObjectId(id) }
     const updateUser = {
         $set: {
@@ -44,7 +47,8 @@ router.post('/updateWriter',requireWriter,async(req,res)=>{
             age: age,
             email: email,
             phone: phone,
-            address: address
+            address: address,
+            subcribe:subcribe
         }
     }
 
@@ -57,7 +61,13 @@ router.post('/updateWriter',requireWriter,async(req,res)=>{
 router.get('/uploadNews',requireWriter,(req,res)=>{
     res.render("writer/uploadNews")
 })
-router.post('/uploadNews',async (req, res) => {
+router.post('/uploadNews',requireWriter,async (req, res) => {
+    const acc = req.session["Writer"]
+    const db = await getDB();
+    const writerName = await db.collection('Writer').findOne({'username':acc.name});
+    console.log(writerName)
+    const nameWriter = writerName.name;
+    const idWriter = writerName._id;
     const title = req.body.txtTitle;
     const text = req.body.txtContent;
     const like = [];
@@ -65,16 +75,27 @@ router.post('/uploadNews',async (req, res) => {
     const view = 0;
     const comment = [];
     const uploadNews = {
+        writer: nameWriter,
+        idWriter: idWriter,
         title: title,
         text: text,
         view: view,
         like: like,
         dislike: dislike,
-        comment: comment,
+        comment: comment
     }
     insertObject('Newspaper', uploadNews)
 
     res.redirect('indexWriter')
+})
+router.get('/detailNewsOfWriter',  async(req, res) => {
+    const id = req.query.id;
+    const db = await getDB();
+    const news = await db.collection("Newspaper").findOne({ _id: ObjectId(id) })
+
+    var coinView = news.view * 1/1000;
+    console.log(coinView)
+    res.render("writer/detailNewsOfWriter", { news: news, coinView:coinView})
 })
 
 module.exports = router;

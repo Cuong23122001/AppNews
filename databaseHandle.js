@@ -46,4 +46,4 @@ async function getRole(name, pass) {
     }
 }
 
-module.exports = {getDB,insertObject,getRole};
+module.exports = {getDB,insertObject,getRole,ObjectId};

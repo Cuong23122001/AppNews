@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,20 +11,23 @@
         integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
         crossorigin="anonymous"></script>
     <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
-    <title>Document</title>
+    <title>Homepage User</title>
 </head>
+
 <body>
+
     <a href="/user/infoUser"><i class='fas fa-user-circle' style='font-size:36px'></i></a>
-    
+    <a href="/user/chargeMoney"><i class="fa fa-plus-circle"> {{user.coin}} $</i></a>
     <table class="table">
         <tbody>
             {{#each data}}
             <tr>
-                <td>{{title}}</td>
+                <td><a href="/user/detailNewsOfWriter?id={{_id}}">{{title}}</a></td>
                 <td>{{text}}</td>
             </tr>
             {{/each}}
         </tbody>
     </table>
 </body>
+
 </html>

@@ -1,0 +1,34 @@
+.item1 { grid-area: main; }
+.item2 { grid-area: right1; }
+.item3 { grid-area: right2; }
+
+.grid-container {
+  display: grid;
+  grid-template-areas:
+    'right1 main main'
+    'right2 main main';
+  gap: 10px;
+  background-color: #2196F3;
+  padding: 10px;
+}
+
+.grid-container > div {
+  background-color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  padding: 20px 0;
+  font-size: 30px;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns:auto auto auto auto auto;
+  background-color: #2196F3;
+  padding: 10px;
+}
+.grid-item {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  font-size: 30px;
+  text-align: center;
+}

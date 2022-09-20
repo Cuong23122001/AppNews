@@ -1,24 +1,37 @@
 const express = require('express');
 const session = require('express-session')
-const { getDB, getRole, insertObject } = require('./databaseHandle');
+const { getDB, getRole, insertObject,ObjectId} = require('./databaseHandle');
 
 const app = express()
+
 app.set('view engine', 'hbs')
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
 
 app.use(session({ secret: '124447yd@@$%%#', cookie: { maxAge: 900000 }, saveUninitialized: false, resave: false }))
 
-app.get('/', (req, res) => {
-    res.render("index");
+app.get('/', async(req, res) => {
+    const db = await getDB();
+    const allnews = await db.collection('Newspaper').find({}).toArray();
+    const a = allnews[0]
+    const b = allnews[1]
+    const c = allnews[2]
+    res.render('index',{item1:a, item2:b, item3:c})
 })
-
-app.get('/register', (req, res) => {
+app.get('/detailNews',  async(req, res) => {
+    const id = req.query.id;
+    const db = await getDB();
+    await db.collection("Newspaper").updateOne({ _id: ObjectId(id) }, { $inc: { "view": 1 } })
+    const news = await db.collection("Newspaper").findOne({ _id: ObjectId(id) })
+    res.render("detailNews", { news: news})
+})
+app.get('/register',async (req, res) => {
     res.render("register");
 })
 app.post('/register', async (req, res) => {
     const username = req.body.txtUsername;
     const password = req.body.txtPassword;
+    var coin = 0;
     const role = req.body.txtSelect;
 
     console.log(role)
@@ -29,7 +42,8 @@ app.post('/register', async (req, res) => {
         role: role
     }
     const newUser = {
-        username: username
+        username: username,
+        coin:coin
     }
 
     if (role == "Manager") {
@@ -43,7 +57,7 @@ app.post('/register', async (req, res) => {
         insertObject('User', newUser)
     }
 
-    res.render('index');
+    res.redirect('/');
 })
 
 //Login
@@ -107,7 +121,8 @@ app.use('/user', userController)
 const managerController = require('./controller/manager')
 app.use('/manager', managerController)
 
-const writerController = require('./controller/writer')
+const writerController = require('./controller/writer');
+const async = require('hbs/lib/async');
 app.use('/writer', writerController)
 
 const PORT = process.env.PORT || 2001;

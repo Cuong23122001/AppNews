@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="../mystyle.css">
 </head>
+
 <body>
-    <h1>Hello</h1>
-    <a href="/login">Login</a>
-    <a href="/register">Register</a>
+    <div style="text-align: right;">
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </div>
+    <br>
+    <center>
+        <div class="grid-container">
+            <div class="item1"><a href="/detailNews?id={{item1._id}}">{{item1.title}}</a> <br> {{item1.text}}</div>
+            <div class="item2">{{item2.title}} <br> {{item2.text}}</div>
+            <div class="item3">{{item3.title}} <br> {{item3.text}}</div>
+        </div>
+    </center>
 </body>
+
 </html>
