@@ -1,6 +1,6 @@
 const express = require('express');
 const session = require('express-session')
-const { getDB, getRole, insertObject,ObjectId} = require('./databaseHandle');
+const { getDB, getRole, insertObject, ObjectId } = require('./databaseHandle');
 
 const app = express()
 
@@ -8,24 +8,41 @@ app.set('view engine', 'hbs')
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
 
+app.use("/images", express.static('images'))
+
 app.use(session({ secret: '124447yd@@$%%#', cookie: { maxAge: 900000 }, saveUninitialized: false, resave: false }))
 
-app.get('/', async(req, res) => {
+
+app.get('/', async (req, res) => {
     const db = await getDB();
     const allnews = await db.collection('Newspaper').find({}).toArray();
+
     const a = allnews[0]
     const b = allnews[1]
     const c = allnews[2]
-    res.render('index',{item1:a, item2:b, item3:c})
+
+    var x = allnews.length + 1;
+    const h = allnews.slice(3, x)
+
+    const category = await db.collection('Category').find({}).toArray();
+
+    var groupCategory = []
+
+    for (let i = 0; i < category.length; i++) {
+        const allnews = await db.collection('Newspaper').find({ category: category[i].name }).toArray();
+        groupCategory.push(allnews)
+    }
+
+    res.render('index', { item1: a, item2: b, item3: c, data: h, group: groupCategory, allnews:allnews})
 })
-app.get('/detailNews',  async(req, res) => {
+app.get('/detailNews', async (req, res) => {
     const id = req.query.id;
     const db = await getDB();
     await db.collection("Newspaper").updateOne({ _id: ObjectId(id) }, { $inc: { "view": 1 } })
     const news = await db.collection("Newspaper").findOne({ _id: ObjectId(id) })
-    res.render("detailNews", { news: news})
+    res.render("detailNews", { news: news })
 })
-app.get('/register',async (req, res) => {
+app.get('/register', async (req, res) => {
     res.render("register");
 })
 app.post('/register', async (req, res) => {
@@ -34,7 +51,6 @@ app.post('/register', async (req, res) => {
     var coin = 0;
     const role = req.body.txtSelect;
 
-    console.log(role)
 
     const newAccount = {
         username: username,
@@ -43,7 +59,7 @@ app.post('/register', async (req, res) => {
     }
     const newUser = {
         username: username,
-        coin:coin
+        coin: coin
     }
 
     if (role == "Manager") {
@@ -75,13 +91,17 @@ app.get('/', (req, res) => {
 app.get('/login', (req, res) => {
     res.render('login')
 })
+app.get('/logout', (req, res) => {
+    req.session.destroy()
+    res.redirect('/')
+})
 
 app.post('/login', async (req, res) => {
     const name = req.body.txtUsername;
     const pass = req.body.txtPassword;
     const role = await getRole(name, pass);
     if (role == -1) {
-        res.render('login')
+        res.redirect('/')
     } else if (role == "Admin") {
         req.session["Admin"] = {
             name: name,

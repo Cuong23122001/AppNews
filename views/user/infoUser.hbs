@@ -12,12 +12,14 @@
         {{data.avatar}}
     </div> --}}
     <div>
+        <img src="../../images/{{data.files.filename}}" alt="Avatar_User" width="40%" style="border-radius: 50%;"><br>
         <label>Name: {{data.name}}</label><br>
         <label>Age: {{data.age}}</label><br>
         <label>Email: {{data.email}}</label><br>
         <label>Phone Number: {{data.phone}}</label><br>
         <label>Address : {{data.address}}</label><br><br>
         <button><a href="/user/updateUser">Update</a></button>
+        <button><a href="/user/indexUser">Return</a></button>
     </div>
     </form>
 </body>

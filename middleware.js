@@ -2,7 +2,7 @@ function requireAdmin(req, res, next) {
     if (req.session["Admin"]) {
         return next()
     } else {
-        res.redirect('/login')
+        res.redirect('/')
     }
 }
 
@@ -10,7 +10,7 @@ function requireManager(req, res, next) {
     if (req.session["Manager"]) {
         return next()
     } else {
-        res.redirect('/login')
+        res.redirect('/')
     }
 }
 
@@ -18,7 +18,7 @@ function requireWriter(req, res, next) {
     if (req.session["Writer"]) {
         return next()
     } else {
-        res.redirect('/login')
+        res.redirect('/')
     }
 }
 
@@ -26,7 +26,7 @@ function requireUser(req, res, next) {
     if (req.session["User"]) {
         return next()
     } else {
-        res.redirect('/login')
+        res.redirect('/')
     }
 }
 

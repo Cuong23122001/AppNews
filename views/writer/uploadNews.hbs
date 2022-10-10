@@ -1,17 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <title>Document</title>
 </head>
+
 <body>
-    <form action="uploadNews" method="POST">
+    <form action="uploadNews" method="POST" enctype="multipart/form-data">
         Title: <input type="text" name="txtTitle"><br>
         Content: <input type="text" name="txtContent"><br>
+        Category: <select id="mySelect" name="txtSelect" class="w-25 d-inline">
+            {{#each category}}
+                <option value="{{name}}">{{name}}</option>
+            {{/each}}
+        </select>
+        <br>
+        Choose image: <br>
+        <input type="file" name="folderImages" ><br><br>
         <input type="submit" value="Upload">
         <button><a href="/writer">Cancel</a></button>
     </form>
 </body>
+
 </html>

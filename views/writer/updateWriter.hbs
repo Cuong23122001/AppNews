@@ -7,8 +7,9 @@
     <title>Document</title>
 </head>
 <body>
-    <form action="updateWriter" method="POST">
+    <form action="updateWriter" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="txtId" value="{{data._id}}">
+    Avatar: <input type="file" name="folderImages" ><br>
     Name: <input type="text" name="txtName" value="{{data.name}}"><br>
     Age: <input type="text" name="txtAge" value="{{data.age}}"><br>
     Email: <input type="email" name="txtEmail" value="{{data.email}}"><br>
