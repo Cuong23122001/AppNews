@@ -108,13 +108,44 @@ router.post('/uploadNews', upload.single('folderImages'), requireWriter, async (
     //date time current
     const d = new Date();
     var minutes = d.getMinutes();
+    var months = d.getMonth() + 1;
+    var days = d.getDate();
     var formatDate = ""
-    
-    if (minutes > 9) {
-        formatDate = [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), d.getMinutes()].join(':')
+    if (months > 9) {
+        if (days > 9) {
+            if (minutes > 9) {
+                formatDate = [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), d.getMinutes()].join(':')
+            } else {
+                var minutes = '0' + minutes;
+                formatDate = [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), minutes].join(':')
+            }
+        } else {
+            days = '0' + days;
+            if (minutes > 9) {
+                formatDate = [days, d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), d.getMinutes()].join(':')
+            } else {
+                var minutes = '0' + minutes;
+                formatDate = [days, d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), minutes].join(':')
+            }
+        }
     } else {
-        var minutes = '0' + minutes;
-        formatDate = [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), minutes].join(':')
+        months = '0' + months;
+        if (days > 9) {
+            if (minutes > 9) {
+                formatDate = [d.getDate(), months, d.getFullYear()].join('/') + ' ' + [d.getHours(), d.getMinutes()].join(':')
+            } else {
+                var minutes = '0' + minutes;
+                formatDate = [d.getDate(), months, d.getFullYear()].join('/') + ' ' + [d.getHours(), minutes].join(':')
+            }
+        } else {
+            days = '0' + days;
+            if (minutes > 9) {
+                formatDate = [days, months, d.getFullYear()].join('/') + ' ' + [d.getHours(), d.getMinutes()].join(':')
+            } else {
+                var minutes = '0' + minutes;
+                formatDate = [days, months, d.getFullYear()].join('/') + ' ' + [d.getHours(), minutes].join(':')
+            }
+        }
     }
     const date = formatDate;
 
@@ -131,6 +162,13 @@ router.post('/uploadNews', upload.single('folderImages'), requireWriter, async (
         comment: comment,
         files: files
     }
+
+    await db.collection("Category").updateOne({ name: category }, {
+        $push: {
+            news: uploadNews
+        }
+    })
+
     insertObject('Newspaper', uploadNews)
     res.redirect('indexWriter')
 })

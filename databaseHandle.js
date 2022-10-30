@@ -14,26 +14,6 @@ async function DeleteObject(id){
     const db = await getDB();
     await db.collection("toys").deleteOne({_id:ObjectId(id)});
 }
-async function UpdateObject(id, nameInput,imageInput,priceInput) {
-    const filter = { _id: ObjectId(id) };
-    const newValue = { $set: { name: nameInput,image: imageInput,price:priceInput } };
-
-    const dbo = await getDB();
-    await dbo.collection("toys").updateOne(filter, newValue);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 async function getRole(name, pass) {
     const db = await getDB()

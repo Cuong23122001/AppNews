@@ -1,6 +1,6 @@
 const express = require('express')
-const { ObjectId, MaxKey } = require('mongodb')
-const { getDB, insertObject, deleteCoordinator, deleteStaff, deleteManager } = require('../databaseHandle')
+const { ObjectId } = require('mongodb')
+const { getDB} = require('../databaseHandle')
 const { requireUser } = require('../middleware')
 const bodyParser = require('body-parser');
 var appRoot = require('app-root-path');
@@ -32,7 +32,7 @@ router.get('/', requireUser, async (req, res) => {
         groupCategory.push(allnews)
     }
 
-    res.render('user/indexUser', { user: user, item1: a, item2: b, item3: c, data: h, group: groupCategory })
+    res.render('user/indexUser', { user: user, item1: a, item2: b, item3: c, data: h,category:category, group: groupCategory })
 })
 router.get('/indexUser', requireUser, async (req, res) => {
     const acc = req.session["User"]
@@ -81,181 +81,6 @@ router.post('/updateUser', requireUser, async (req, res) => {
     res.redirect("/user/infoUser")
 })
 
-// detail newspaper
-router.get('/detailNewsOfWriter', requireUser, async (req, res) => {
-    const account = req.session["User"]
-    const id = req.query.id;
-
-    const db = await getDB();
-    const news = await db.collection("Newspaper").findOne({ _id: ObjectId(id) })
-    const user = await db.collection('User').findOne({ 'username': account.name })
-    const writer = await db.collection("Writer").findOne({ _id: ObjectId(news.idWriter) })
-    const allnews = await db.collection('Newspaper').find({}).toArray();
-    const hotNews = allnews.slice(0, 5)
-
-    const x = await db.collection("Writer").findOne({ $and: [{ _id: ObjectId(news.idWriter) }, { 'subcribe': user._id }] })
-    var checkSub1 = new Boolean(true);
-    var checkSub2 = new Boolean(true);
-
-    if (x != null) {
-        checkSub1 = Boolean(false)
-    } else {
-        checkSub2 = Boolean(false)
-    }
-
-    const y = await db.collection("Newspaper").findOne({ $and: [{ _id: ObjectId(id) }, { 'like': user._id }] })
-    var checkLike1 = new Boolean(true);
-    var checkLike2 = new Boolean(true);
-
-    if (y != null) {
-        checkLike1 = Boolean(false)
-    } else {
-        checkLike2 = Boolean(false)
-    }
-    await db.collection("Newspaper").updateOne({ _id: ObjectId(id) }, { $inc: { "view": 1 } })
-    let coinViews = news.view * 1 / 1000;
-    await db.collection('Writer').updateOne({ _id: ObjectId(news.idWriter) }, {
-        $set: {
-            coinViews: coinViews
-        }
-    })
-
-    //show comment
-    const comment = news.comment.reverse();
-
-    res.render("user/detailNewsOfWriter", {comment:comment,
-        user: user,news: news, hotNews: hotNews, writer: writer, checkSub1: checkSub1, checkSub2: checkSub2, checkLike1: checkLike1, checkLike2: checkLike2
-    })
-})
-
-//Comment newspaper
-router.post("/user-comment", requireUser, async (req, res) => {
-    console.log("connected comment");
-    const account = req.session["User"]
-
-    const id = req.body.newsID;
-    const comment = req.body.comment;
-    //date time current
-    const d = new Date();
-    var minutes = d.getMinutes();
-    var formatDate = ""
-    
-    if (minutes > 9) {
-        formatDate = [d.getHours(), d.getMinutes()].join(':') + ' ' + [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/')
-    } else {
-        var minutes = '0' + minutes;
-        formatDate = [d.getHours(), minutes].join(':') + ' ' + [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/')
-    }
-    const date = formatDate;
-
-    const db = await getDB();
-    const user = await db.collection('User').findOne({ 'username': account.name })
-    await db.collection('Newspaper').updateOne({ _id: ObjectId(id) }, {
-        $push: {
-            'comment': {
-                "_id":ObjectId(),
-                "user": {
-                    "_id": user._id,
-                    "name": user.name
-                },
-                "comments": comment,
-                "date":date,
-                "reply":[]
-            }
-        }
-    })
-    return;
-})
-router.post("/user-reply-comment",requireUser,async(req,res)=>{
-    console.log("connected reply");
-    const account = req.session["User"];
-    const newsID = req.body.newsID;
-    const commentID = req.body.commentID;
-    const date = req.body.date;
-    const reply = req.body.reply;
-
-    const db  = await getDB();
-    const user = await db.collection('User').findOne({ 'username': account.name })
-
-    await db.collection('Newspaper').updateOne({ _id:ObjectId(newsID), 'comment._id': ObjectId(commentID)  }, {
-        $push: {
-            "comment.$.reply": {
-                "_id":ObjectId(),
-                "user": {
-                    "_id": user._id,
-                    "name": user.name
-                },
-                "reply": reply,
-                "date":date
-            }
-        }
-    })
-    return;
-
-})
-//subcribe writer
-router.post("/user-sub", requireUser, async (req, res) => {
-    console.log("connected subcribe");
-    const account = req.session["User"]
-    const writerID = req.body.writerID;
-
-    const db = await getDB();
-    const user = await db.collection('User').findOne({ 'username': account.name })
-    const writer = await db.collection('Writer').findOne({ _id: ObjectId(writerID) })
-    var coin = writer.coinSub;
-
-    const x = await db.collection('Writer').findOne({ $and: [{ _id: ObjectId(writerID) }, { 'subcribe': user._id }] });
-    if (x == null) {
-        coin = coin + 2;
-        await db.collection('Writer').updateOne({ _id: ObjectId(writerID) }, {
-            $push: {
-                'subcribe': user._id
-            }
-        })
-        await db.collection('Writer').updateOne({ _id: ObjectId(writerID) }, {
-            $set: {
-                coinSub: coin
-            }
-        })
-    } else {
-        coin = coin - 2;
-        await db.collection('Writer').updateOne({ _id: ObjectId(writerID) }, {
-            $pull: {
-                'subcribe': user._id
-            }
-        })
-        await db.collection('Writer').updateOne({ _id: ObjectId(writerID) }, {
-            $set: {
-                coinSub: coin
-            }
-        })
-    }
-})
-
-//like newspaper
-router.post("/user-like", requireUser, async (req, res) => {
-    console.log("connected like");
-    const account = req.session["User"]
-    const id = req.body.newsID;
-
-    const db = await getDB();
-    const user = await db.collection('User').findOne({ 'username': account.name })
-
-    const x = await db.collection('Newspaper').findOne({ $and: [{ _id: ObjectId(id) }, { 'like': user._id }] });
-    if (x == null) {
-        await db.collection('Newspaper').updateOne({ _id: ObjectId(id) }, {
-            $push: {
-                'like': user._id
-            }
-        })
-    } else {
-        await db.collection('Newspaper').updateOne({ _id: ObjectId(id) }, {
-            $pull: {
-                'like': user._id
-            }
-        })
-    }
-})
 
 //Charge money 
 router.get('/chargeMoney', requireUser, async (req, res) => {

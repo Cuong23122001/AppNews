@@ -30,7 +30,18 @@ a:hover {
   flex-direction: row;
   align-items: center;
 }
-
+.itemCategory{
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.itemCategory div{
+  padding-bottom: 10px;
+  padding-top: 10px;
+  padding-right: 5px;
+}
 
 .container-category {
   display: flex;
