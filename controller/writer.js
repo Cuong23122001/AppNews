@@ -6,21 +6,10 @@ const { getDB, insertObject } = require('../databaseHandle')
 const { requireWriter } = require('../middleware')
 const multer = require('multer')
 const path = require('path')
-
+const res = require('express/lib/response')
 
 const router = express.Router()
 
-// index writer
-router.get('/', requireWriter, async (req, res) => {
-    const db = await getDB();
-    const allnews = await db.collection('Newspaper').find({}).toArray();
-    res.render('writer/indexWriter', { data: allnews })
-})
-router.get('/indexWriter', requireWriter, async (req, res) => {
-    const db = await getDB();
-    const allnews = await db.collection('Newspaper').find({}).toArray();
-    res.render('writer/indexWriter', { data: allnews })
-})
 //set files storage
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -39,7 +28,6 @@ router.get('/infoWriter', requireWriter, async (req, res) => {
     const acc = req.session["Writer"]
     const db = await getDB();
     const writer = await db.collection('Writer').findOne({ 'username': acc.name });
-    console.log(writer)
     res.render("writer/infoWriter", { data: writer })
 })
 
@@ -80,8 +68,7 @@ router.post('/updateWriter', upload.single('folderImages'), requireWriter, async
 
     const db = await getDB();
     await db.collection('Writer').updateOne(filter, updateUser);
-    const user = await db.collection('Writer').findOne({ _id: ObjectId(id) });
-    res.redirect("/writer/infoWriter", { data: user })
+    res.redirect("/writer/infoWriter")
 })
 
 //upload article
@@ -150,6 +137,7 @@ router.post('/uploadNews', upload.single('folderImages'), requireWriter, async (
     const date = formatDate;
 
     const uploadNews = {
+        _id:ObjectId(),
         writer: nameWriter,
         idWriter: idWriter,
         date: date,
@@ -158,7 +146,6 @@ router.post('/uploadNews', upload.single('folderImages'), requireWriter, async (
         category: category,
         view: view,
         like: like,
-        dislike: dislike,
         comment: comment,
         files: files
     }
@@ -170,13 +157,76 @@ router.post('/uploadNews', upload.single('folderImages'), requireWriter, async (
     })
 
     insertObject('Newspaper', uploadNews)
-    res.redirect('indexWriter')
+    res.redirect('articlesUploaded')
 })
+
+//Notification
+router.get('/notification', requireWriter, async (req, res) => {
+    const accWriter = req.session['Writer'];
+    const db = await getDB();
+    const writer = await db.collection('Writer').findOne({ 'username': accWriter.name });
+    const allnews = await db.collection('Newspaper').find({ 'idWriter': writer._id }).toArray();
+
+    var notificationComment = []
+    var notificationReply = []
+
+    for (let i = 0; i < allnews.length; i++) {
+        for (let j = 0; j < allnews[i].comment.length; j++) {
+
+            const comment = allnews[i].comment;
+            const a = comment[j].user.name;
+            const b = comment[j].comments;
+            const rep = allnews[i].comment[j].reply;
+            if (a != null) {
+                var notificationCommentLoop = a + ' commented ' + '"' + b + '"' + ' on your article with the title "' + allnews[i].title + '"';
+                notificationComment.push({notificationCommentLoop})
+            }
+            for (let e = 0; e < rep.length; e++) {
+                const repName = rep[e].user.name;
+                const repContent = rep[e].reply;
+                var notificationReplyLoop = repName + ' replied to ' + '"' + a + '"' + ' comment with the content ' + '"' + repContent + '"'
+                    + ' on your article with the title "' + allnews[i].title + '"';
+                notificationReply.push({notificationReplyLoop})
+            }
+        }
+    }
+    res.render('writer/notification',{notificationComment:notificationComment,notificationReply:notificationReply})
+})
+
+//Detail article in UI writer
 router.get('/detailNewsOfWriter', async (req, res) => {
     const id = req.query.id;
     const db = await getDB();
-    const news = await db.collection("Newspaper").findOne({ _id: ObjectId(id) })
-    res.render("writer/detailNewsOfWriter", { news: news })
+    const news = await db.collection("Newspaper").findOne({ _id: ObjectId(id) });
+    res.render("writer/detailNewsOfWriter", { news: news });
+})
+// Article uploaded
+router.get('/articlesUploaded', requireWriter, async (req, res) => {
+    const acc = req.session["Writer"]
+    const db = await getDB();
+    const writer = await db.collection('Writer').findOne({ 'username': acc.name });
+    const allnews = await (await db.collection('Newspaper').find({ 'idWriter': writer._id }).toArray()).reverse();
+    res.render('writer/articlesUploaded', { data: allnews })
+})
+
+//Delete Article
+router.get('/deleteArticle', requireWriter, async (req, res) => {
+    const id = req.query.id;
+    const db = await getDB();
+    await db.collection("Newspaper").deleteOne({ _id: ObjectId(id) });
+    res.redirect("articlesUploaded")
+})
+
+//Most like, view
+router.get('/mostView', requireWriter, async (req, res) => {
+    const db = await getDB();
+    const allNews = await db.collection("Newspaper").find().sort({ view: -1 }).toArray();
+    res.render("writer/articlesUploaded", { data: allNews });
+})
+router.get('/mostLike', requireWriter, async (req, res) => {
+    const db = await getDB();
+    const allNews = await db.collection("Newspaper").find().sort({ like: -1 }).toArray();
+    res.render("writer/articlesUploaded", { data: allNews });
 })
 
 module.exports = router;

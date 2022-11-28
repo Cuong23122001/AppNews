@@ -13,8 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="../css/sidebar.css">
     <style>
-        form >input{
-            margin-bottom: 10px ;
+        li {
+            list-style-type: none;
         }
     </style>
 </head>
@@ -24,19 +24,24 @@
         <nav id="sidebar" class="active">
             <ul class="list-unstyled components mb-5">
                 <li class="active">
-                    <a href="/user/"><span class="fa fa-home"></span> Home</a>
+                    <a href="/"><span class="fa fa-home"></span>Home</a>
+                </li>
+                <li class="active">
+                    <a href="/admin/account"><span class="fas fa-users"></span>Account</a>
                 </li>
                 <li>
-                    <a href="/user/updateUser"><span class="fa fa-user"></span>Update Profile</a>
+                    <a href="/admin/category"><span class="fas fa-tags"></span>Category</a>
                 </li>
                 <li>
-                    <a href="/admin/staff"><span class="fas fa-archive"></span>Newspaper list</a>
+                    <a href="/admin/news"><span class="fas fa-book"></span>News</a>
                 </li>
                 <li>
-                    <a href="/admin/ideas"><span class="fa fa-sticky-note"></span>Articles viewed</a>
+                    <a href="/admin/dashboard"><span class="fas fa-palette"></span>Dashboard</a>
+                </li>
+                <li>
+                    <a href="/logout"><span class="fas fa-sign-out-alt"></span>Logout</a>
                 </li>
             </ul>
-
             <div class="footer">
                 <p>
                     Copyright &copy;
@@ -44,31 +49,32 @@
                     All rights reserved by University of Greenwich
                 </p>
             </div>
+            </footer>
         </nav>
 
         <!-- Page Content  -->
         <div id="content" class="p-4 p-md-5">
             <div class="container">
                 <div class="table-wrapper">
-                    <form action="updateUser" enctype="multipart/form-data" method="POST">
-                        <input type="hidden" name="txtId" value="{{data._id}}">
-                        Avatar: <input type="file" name="folderImages" value="{{data.files.filename}}"><br>
-                        Name: <input type="text" name="txtName" value="{{data.name}}"><br>
-                        Age: <input type="text" name="txtAge" value="{{data.age}}"><br>
-                        Email: <input type="email" name="txtEmail" value="{{data.email}}"><br>
-                        Phone: <input type="text" name="txtPhone" value="{{data.phone}}"><br>
-                        Address: <input type="text" name="txtAddress" value="{{data.address}}"><br>
+                    <form action="updateCategory" method="POST">
+                        <input type="hidden" name="txtId" value="{{category._id}}">
+                        Name: <input type="text" name="txtName" value="{{category.name}}"><br>
+                        Description: <input type="text" name="txtDescription" value="{{category.description}}"><br>
                         <button type="submit" class="btn btn-primary">Save</button>
-                        <button type="button" class="btn btn-primary"> <a href="/user/infoUser" style="color: white;">Cancel</a></button>
+                        <a class="btn btn-danger" href="/admin/detailCategory?id={{detail._id}}"
+                            role="button">Cancel</a>
                     </form>
                 </div>
             </div>
         </div>
 
-        <script src="../js/jquery.min.js"></script>
-        <script src="../js/popper.js"></script>
-        <script src="../js/bootstrap.min.js"></script>
-        <script src="../js/main.js"></script>
+    </div>
+
+
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/main.js"></script>
 </body>
 
 </html>

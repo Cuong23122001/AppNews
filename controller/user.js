@@ -5,6 +5,8 @@ const { requireUser } = require('../middleware')
 const bodyParser = require('body-parser');
 var appRoot = require('app-root-path');
 const async = require('hbs/lib/async');
+const multer = require('multer')
+const path = require('path')
 const router = express.Router()
 
 router.use(bodyParser.urlencoded({ extended: true }))
@@ -50,6 +52,19 @@ router.get('/infoUser', requireUser, async (req, res) => {
     res.render("user/infoUser", { data: user })
 })
 
+//set files storage
+var storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'images')
+    },
+    filename: (req, file, cb) => {
+        var datetime = Date.now()
+        cb(null, file.fieldname + '_' + datetime + path.extname(file.originalname))
+    }
+})
+
+const upload = multer({ storage: storage })
+
 //update profile user
 router.get('/updateUser', requireUser, async (req, res) => {
     const acc = req.session["User"]
@@ -57,8 +72,9 @@ router.get('/updateUser', requireUser, async (req, res) => {
     const user = await db.collection('User').findOne({ 'username': acc.name });
     res.render("user/updateUser", { data: user })
 })
-router.post('/updateUser', requireUser, async (req, res) => {
+router.post('/updateUser',upload.single('folderImages'), requireUser, async (req, res) => {
     const id = req.body.txtId;
+    const file = req.file;
     const name = req.body.txtName;
     const age = req.body.txtAge;
     const email = req.body.txtEmail;
@@ -67,6 +83,7 @@ router.post('/updateUser', requireUser, async (req, res) => {
     const filter = { _id: ObjectId(id) }
     const updateUser = {
         $set: {
+            files: file,
             name: name,
             age: age,
             email: email,
@@ -77,7 +94,7 @@ router.post('/updateUser', requireUser, async (req, res) => {
 
     const db = await getDB();
     await db.collection('User').updateOne(filter, updateUser);
-
+    
     res.redirect("/user/infoUser")
 })
 

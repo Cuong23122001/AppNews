@@ -18,12 +18,26 @@ app.get('/', async (req, res) => {
     const db = await getDB();
     const allnews = await (await db.collection('Newspaper').find({}).toArray()).reverse();
     var user;
-    var checkLogin = new Boolean(true);
+    var checkLogin = new Boolean(true)
+    var checkUserLogin = new Boolean(true);
+    var checkWriterLogin = new Boolean(true);
+
     if (acc != null) {
-        user = await db.collection('User').findOne({ 'username': acc.name });
+        if (acc.role == "User") {
+            user = await db.collection('User').findOne({ 'username': acc.name });
+            checkUserLogin = Boolean(true);
+            checkWriterLogin = Boolean(false);
+        }
+        if (acc.role == "Writer") {
+            user = await db.collection('Writer').findOne({ 'username': acc.name });
+            checkWriterLogin = Boolean(true);
+            checkUserLogin = Boolean(false);
+        }
         checkLogin = Boolean(false);
-    }else{
+    } else {
         checkLogin = Boolean(true);
+        checkUserLogin = Boolean(false);
+        checkWriterLogin = Boolean(false);
     }
 
     const a = allnews[0]
@@ -42,7 +56,10 @@ app.get('/', async (req, res) => {
         groupCategory.push(allnews)
     }
 
-    res.render('index', { user: user, item1: a, item2: b, item3: c, data: h, category: category, group: groupCategory,checkLogin:checkLogin })
+    res.render('index', {
+        user: user, item1: a, item2: b, item3: c, data: h, category: category, group: groupCategory,
+        checkUserLogin: checkUserLogin, checkWriterLogin: checkWriterLogin, checkLogin: checkLogin
+    })
 })
 
 //register account
@@ -60,20 +77,11 @@ app.post('/register', async (req, res) => {
         password: password,
         role: role
     }
-    const newUser = {
-        username: username,
-        coin: coin
-    }
 
-    if (role == "Manager") {
+    if (role == "Writer") {
         insertObject('Account', newAccount)
-        insertObject('Manager', newUser)
-    } else if (role == "Writer") {
-        insertObject('Account', newAccount)
-        insertObject('Writer', newUser)
     } else if (role == "User") {
         insertObject('Account', newAccount)
-        insertObject('User', newUser)
     }
 
     res.redirect('/');
@@ -96,8 +104,6 @@ app.post('/login', async (req, res) => {
     const name = req.body.txtUsername;
     const pass = req.body.txtPassword;
     const role = await getRole(name, pass);
-    console.log(name + " " + pass);
-    console.log(role);
     const db = await getDB();
     const user = await db.collection('Account').findOne({ $and: [{ username: name }, { password: pass }] });
     if (user) {
@@ -106,7 +112,6 @@ app.post('/login', async (req, res) => {
             name: name,
             role: role
         }
-        console.log(user);
     }
     if (role == -1) {
         res.redirect('/login')
@@ -131,7 +136,7 @@ app.post('/login', async (req, res) => {
             name: name,
             role: role
         }
-        res.redirect('writer')
+        res.redirect('/')
     } else if (role == "User") {
         req.session["User"] = {
             _id: user._id,
@@ -150,7 +155,7 @@ app.get('/logout', (req, res) => {
 
 // detail newspaper
 app.get('/detailNewsOfWriter', async (req, res) => {
-    const account = req.session.Acc
+    const account = req.session.Acc;
     const id = req.query.id;
     var user;
 
@@ -171,24 +176,49 @@ app.get('/detailNewsOfWriter', async (req, res) => {
     //check login
 
     if (account != null) {
-        user = await db.collection('User').findOne({ 'username': account.name })
-        checkUser = Boolean(false);
+        console.log(account);
+        console.log(account.role);
+        if (account.role == "User") {
+            user = await db.collection('User').findOne({ 'username': account.name })
+            checkUser = Boolean(false);
 
-        //check subscribe
-        const x = await db.collection("Writer").findOne({ $and: [{ _id: ObjectId(news.idWriter) }, { 'subcribe': user._id }] })
-        if (x != null) {
-            checkSub1 = Boolean(false)
-        } else {
-            checkSub2 = Boolean(false)
+            //check subscribe
+            const x = await db.collection("Writer").findOne({ $and: [{ _id: ObjectId(news.idWriter) }, { 'subcribe': user._id }] })
+            if (x != null) {
+                checkSub1 = Boolean(false)
+            } else {
+                checkSub2 = Boolean(false)
+            }
+
+            //check like
+            const y = await db.collection("Newspaper").findOne({ $and: [{ _id: ObjectId(id) }, { 'like': user._id }] })
+            if (y != null) {
+                checkLike1 = Boolean(false)
+            } else {
+                checkLike2 = Boolean(false)
+            }
+        }
+        if (account.role == "Writer") {
+            user = await db.collection('Writer').findOne({ 'username': account.name })
+            checkUser = Boolean(false);
+
+            //check subscribe
+            const x = await db.collection("Writer").findOne({ $and: [{ _id: ObjectId(news.idWriter) }, { 'subcribe': user._id }] })
+            if (x != null) {
+                checkSub1 = Boolean(false)
+            } else {
+                checkSub2 = Boolean(false)
+            }
+
+            //check like
+            const y = await db.collection("Newspaper").findOne({ $and: [{ _id: ObjectId(id) }, { 'like': user._id }] })
+            if (y != null) {
+                checkLike1 = Boolean(false)
+            } else {
+                checkLike2 = Boolean(false)
+            }
         }
 
-        //check like
-        const y = await db.collection("Newspaper").findOne({ $and: [{ _id: ObjectId(id) }, { 'like': user._id }] })
-        if (y != null) {
-            checkLike1 = Boolean(false)
-        } else {
-            checkLike2 = Boolean(false)
-        }
     } else {
         checkLogin = "Please login";
         checkSub1 = new Boolean(true);
@@ -212,8 +242,8 @@ app.get('/detailNewsOfWriter', async (req, res) => {
     const comment = news.comment.reverse();
 
     res.render("detailNewsOfWriter", {
-        comment: comment, user: user, news: news, hotNews: hotNews, writer: writer, checkLogin: checkLogin,checkUser:checkUser,
-        category:category, checkSub1: checkSub1, checkSub2: checkSub2, checkLike1: checkLike1, checkLike2: checkLike2
+        comment: comment, user: user, news: news, hotNews: hotNews, writer: writer, checkLogin: checkLogin, checkUser: checkUser,
+        category: category, checkSub1: checkSub1, checkSub2: checkSub2, checkLike1: checkLike1, checkLike2: checkLike2
     })
 })
 
@@ -233,7 +263,7 @@ app.get('/newsOfCategory', async (req, res) => {
     //Check login
     if (acc != null) {
         checkLogin = Boolean(false);
-    }else{
+    } else {
         checkLogin = Boolean(true);
     }
     //show news have most view in 3 months
@@ -273,7 +303,7 @@ app.get('/newsOfCategory', async (req, res) => {
         }
     }
 
-    res.render("newsOfCategory", { data: newsOfCategory, newsOfHotNews: hotNews, category: categoryAll,checkLogin:checkLogin })
+    res.render("newsOfCategory", { data: newsOfCategory, newsOfHotNews: hotNews, category: categoryAll, checkLogin: checkLogin })
 })
 
 //Comment newspaper
@@ -346,7 +376,12 @@ app.post("/user-sub", async (req, res) => {
 
     const db = await getDB();
     var user;
-    user = await db.collection('User').findOne({ 'username': account.name })
+    if (account.role == "User") {
+        user = await db.collection('User').findOne({ 'username': account.name })
+    }
+    if (account.role == "Writer") {
+        user = await db.collection('Writer').findOne({ 'username': account.name })
+    }
     const writer = await db.collection('Writer').findOne({ _id: ObjectId(writerID) })
     var coin = writer.coinSub;
 
@@ -414,9 +449,6 @@ app.use('/admin', adminController)
 
 const userController = require('./controller/user')
 app.use('/user', userController)
-
-const managerController = require('./controller/manager')
-app.use('/manager', managerController)
 
 const writerController = require('./controller/writer');
 const async = require('hbs/lib/async');

@@ -5,15 +5,6 @@ function requireAdmin(req, res, next) {
         res.redirect('/')
     }
 }
-
-function requireManager(req, res, next) {
-    if (req.session["Manager"]) {
-        return next()
-    } else {
-        res.redirect('/')
-    }
-}
-
 function requireWriter(req, res, next) {
     if (req.session["Writer"]) {
         return next()
@@ -32,7 +23,6 @@ function requireUser(req, res, next) {
 
 module.exports = {
     requireAdmin,
-    requireManager,
     requireWriter,
     requireUser
 }
